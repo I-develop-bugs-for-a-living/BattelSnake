@@ -3,7 +3,7 @@ import random
 import numpy as np
 from collections import deque
 from game import SnakeGameAI, Direction, Point
-from model import Linear_QNet, QTrainer
+from model import Linear_QNet, QTrainer, DeepQNet
 from helper import plot
 
 MAX_MEMORY = 100_000
@@ -18,7 +18,7 @@ class Agent:
         self.epsilon = 0 # randomness
         self.gamma = 0.9 # discount rate
         self.memory = deque(maxlen=MAX_MEMORY) # popleft()
-        self.model = Linear_QNet(11, 1024, 3)
+        self.model = DeepQNet(11, 800, 3)
         self.model.to(self.device)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
         
@@ -127,9 +127,6 @@ def train():
         state_new = agent.get_state(game)
 
         # Adjust reward based on moving towards tail
-        if reward == 0 and game._is_moving_towards_tail(final_move):
-            reward = -6
-
         # train short memory
         agent.train_short_memory(state_old, final_move, reward, state_new, done)
 

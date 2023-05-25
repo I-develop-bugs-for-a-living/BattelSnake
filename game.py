@@ -41,14 +41,28 @@ class SnakeGameAI:
             return True
 
         # Check if the distance between the head and the tail is at most 4 blocks
-        if len(self.snake) > 4:
+        if len(self.snake) > 3:
             tail = self.snake[-1]
             distance = abs(new_head.x - tail.x) + abs(new_head.y - tail.y)
             if distance <= 4:
                 return True
 
         return False
+    def is_head_adjacent_to_body(self):
+        # Get the head's adjacent points
+        adjacents = [
+            Point(self.head.x - BLOCK_SIZE, self.head.y), # left
+            Point(self.head.x + BLOCK_SIZE, self.head.y), # right
+            Point(self.head.x, self.head.y - BLOCK_SIZE), # up
+            Point(self.head.x, self.head.y + BLOCK_SIZE)  # down
+        ]
 
+        # Check if any adjacent points are in the snake's body
+        for pt in adjacents:
+            if pt in self.snake[1:]: # Exclude the head itself
+                return True
+
+        return False
 
 
     def __init__(self, w=640, h=480):
@@ -101,8 +115,13 @@ class SnakeGameAI:
         game_over = False
         if self.is_collision() or self.frame_iteration > 100*len(self.snake):
             game_over = True
-            reward = -10
+            reward = -13
             return reward, game_over, self.score
+        
+        if self._is_moving_towards_tail(action):
+            reward = -2
+        elif self.is_head_adjacent_to_body():
+            reward = 0
 
         # 4. place new food or just move
         if self.head == self.food:
