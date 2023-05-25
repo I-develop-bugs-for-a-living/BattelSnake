@@ -13,13 +13,15 @@ LR = 0.001
 class Agent:
 
     def __init__(self):
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.n_games = 0
         self.epsilon = 0 # randomness
         self.gamma = 0.9 # discount rate
         self.memory = deque(maxlen=MAX_MEMORY) # popleft()
         self.model = Linear_QNet(11, 1024, 3)
+        self.model.to(self.device)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
+        
 
     def get_state(self, game):
         head = game.snake[0]
@@ -77,6 +79,11 @@ class Agent:
             mini_sample = self.memory
 
         states, actions, rewards, next_states, dones = zip(*mini_sample)
+        states = torch.tensor(states, dtype=torch.float).to(self.device)
+        actions = torch.tensor(actions, dtype=torch.long).to(self.device)
+        rewards = torch.tensor(rewards, dtype=torch.float).to(self.device)
+        next_states = torch.tensor(next_states, dtype=torch.float).to(self.device)
+        dones = torch.tensor(dones, dtype=torch.float).to(self.device)
         self.trainer.train_step(states, actions, rewards, next_states, dones)
         #for state, action, reward, nexrt_state, done in mini_sample:
         #    self.trainer.train_step(state, action, reward, next_state, done)
@@ -93,6 +100,7 @@ class Agent:
             final_move[move] = 1
         else:
             state0 = torch.tensor(state, dtype=torch.float)
+            state0 = state0.to(self.device)
             prediction = self.model(state0)
             move = torch.argmax(prediction).item()
             final_move[move] = 1
@@ -117,6 +125,10 @@ def train():
         # perform move and get new state
         reward, done, score = game.play_step(final_move)
         state_new = agent.get_state(game)
+
+        # Adjust reward based on moving towards tail
+        if reward == 0 and game._is_moving_towards_tail(final_move):
+            reward = -6
 
         # train short memory
         agent.train_short_memory(state_old, final_move, reward, state_new, done)

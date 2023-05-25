@@ -24,9 +24,32 @@ BLUE2 = (0, 100, 255)
 BLACK = (0,0,0)
 
 BLOCK_SIZE = 20
-SPEED = 100
+SPEED = 400
 
 class SnakeGameAI:
+    def _is_moving_towards_tail(self, action):
+        # Calculate the next head position based on the action
+        if np.array_equal(action, [1, 0, 0]):
+            new_head = Point(self.head.x + BLOCK_SIZE, self.head.y)
+        elif np.array_equal(action, [0, 1, 0]):
+            new_head = Point(self.head.x, self.head.y + BLOCK_SIZE)
+        else:
+            new_head = Point(self.head.x - BLOCK_SIZE, self.head.y)  # Assuming LEFT action
+
+        # Check if the new head position is equal to the position of the tail segment
+        if new_head == self.snake[-1]:
+            return True
+
+        # Check if the distance between the head and the tail is at most 4 blocks
+        if len(self.snake) > 4:
+            tail = self.snake[-1]
+            distance = abs(new_head.x - tail.x) + abs(new_head.y - tail.y)
+            if distance <= 4:
+                return True
+
+        return False
+
+
 
     def __init__(self, w=640, h=480):
         self.w = w
