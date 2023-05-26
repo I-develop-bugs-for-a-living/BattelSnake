@@ -24,7 +24,7 @@ BLUE2 = (0, 100, 255)
 BLACK = (0,0,0)
 
 BLOCK_SIZE = 20
-SPEED = 400
+SPEED = 300
 
 class SnakeGameAI:
     def _is_moving_towards_tail(self, action):
@@ -115,18 +115,18 @@ class SnakeGameAI:
         game_over = False
         if self.is_collision() or self.frame_iteration > 100*len(self.snake):
             game_over = True
-            reward = -13
+            reward = -3 if self.isCollidingWithSelf() else -2 if self.isCollidingWithWall else -4
             return reward, game_over, self.score
         
         if self._is_moving_towards_tail(action):
-            reward = -2
+            reward = -1
         elif self.is_head_adjacent_to_body():
             reward = 0
 
         # 4. place new food or just move
         if self.head == self.food:
             self.score += 1
-            reward = 10
+            reward += 6
             self._place_food()
         else:
             self.snake.pop()
@@ -137,6 +137,18 @@ class SnakeGameAI:
         # 6. return game over and score
         return reward, game_over, self.score
 
+    def isCollidingWithSelf(self, pt=None):
+        if pt is None:
+            pt = self.head
+        if pt in self.snake[1:]:
+            return True
+        return False
+    def isCollidingWithWall(self, pt=None):
+        if pt is None:
+            pt = self.head
+        if pt.x > self.w - BLOCK_SIZE or pt.x < 0 or pt.y > self.h - BLOCK_SIZE or pt.y < 0:
+            return True
+        return False
 
     def is_collision(self, pt=None):
         if pt is None:

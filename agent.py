@@ -6,8 +6,8 @@ from game import SnakeGameAI, Direction, Point
 from model import Linear_QNet, QTrainer, DeepQNet
 from helper import plot
 
-MAX_MEMORY = 100_000
-BATCH_SIZE = 1000
+MAX_MEMORY = 300_000
+BATCH_SIZE = 3000
 LR = 0.001
 
 class Agent:
@@ -18,7 +18,7 @@ class Agent:
         self.epsilon = 0 # randomness
         self.gamma = 0.9 # discount rate
         self.memory = deque(maxlen=MAX_MEMORY) # popleft()
-        self.model = DeepQNet(11, 800, 3)
+        self.model = DeepQNet(11, 1500, 3)
         self.model.to(self.device)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
         
