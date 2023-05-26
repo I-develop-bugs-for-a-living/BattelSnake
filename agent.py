@@ -10,17 +10,23 @@ MAX_MEMORY = 300_000
 BATCH_SIZE = 3000
 LR = 0.001
 
-class Agent:
 
-    def __init__(self):
+class Agent:
+    def __init__(self, game):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        print(self.device)
         self.n_games = 0
-        self.epsilon = 0 # randomness
-        self.gamma = 0.9 # discount rate
-        self.memory = deque(maxlen=MAX_MEMORY) # popleft()
-        self.model = DeepQNet(11, 1500, 3)
+        self.epsilon = 0  # randomness
+        self.gamma = 0.9  # discount rate
+        self.memory = deque(maxlen=MAX_MEMORY)  # popleft()
+
+        # Assume game.w and game.h are the width and height of the game board
+        # and BLOCK_SIZE is the size of each block
+        state_size = 11 + (game.w // game.BLOCK_SIZE + 1) * (game.h // game.BLOCK_SIZE + 1)
+        self.model = DeepQNet(state_size, 1024, 3)
         self.model.to(self.device)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
+
         
 
     def get_state(self, game):
@@ -29,7 +35,7 @@ class Agent:
         point_r = Point(head.x + 20, head.y)
         point_u = Point(head.x, head.y - 20)
         point_d = Point(head.x, head.y + 20)
-        
+
         dir_l = game.direction == Direction.LEFT
         dir_r = game.direction == Direction.RIGHT
         dir_u = game.direction == Direction.UP
@@ -53,21 +59,33 @@ class Agent:
             (dir_u and game.is_collision(point_l)) or 
             (dir_r and game.is_collision(point_u)) or 
             (dir_l and game.is_collision(point_d)),
-            
+
             # Move direction
             dir_l,
             dir_r,
             dir_u,
             dir_d,
-            
+
             # Food location 
             game.food.x < game.head.x,  # food left
             game.food.x > game.head.x,  # food right
             game.food.y < game.head.y,  # food up
             game.food.y > game.head.y  # food down
-            ]
+        ]
+
+        # initialize a grid with 0
+        grid = np.zeros((game.w // game.BLOCK_SIZE + 1, game.h // game.BLOCK_SIZE + 1), dtype=int)
+
+        # set the position of the snake's body on the grid with 1
+        for point in game.snake[1:]:
+            grid[int(point.y // game.BLOCK_SIZE)][int(point.x // game.BLOCK_SIZE)] = 1
+
+        # flatten the grid and add it to the state
+        grid_flat = grid.flatten()
+        state.extend(grid_flat)
 
         return np.array(state, dtype=int)
+
 
     def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done)) # popleft if MAX_MEMORY is reached
@@ -113,8 +131,9 @@ def train():
     plot_mean_scores = []
     total_score = 0
     record = 0
-    agent = Agent()
     game = SnakeGameAI()
+    agent = Agent(game)
+    
     while True:
         # get old state
         state_old = agent.get_state(game)

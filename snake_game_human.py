@@ -27,7 +27,7 @@ SPEED = 20
 
 class SnakeGame:
     
-    def __init__(self, w=640, h=480):
+    def __init__(self, w=220, h=220):
         self.w = w
         self.h = h
         # init display

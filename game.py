@@ -70,7 +70,7 @@ class SnakeGameAI:
         return False
 
 
-    def __init__(self, w=640, h=480):
+    def __init__(self, w=440, h=440):
         self.w = w
         self.h = h
         # init display
@@ -78,6 +78,7 @@ class SnakeGameAI:
         pygame.display.set_caption('Snake')
         self.clock = pygame.time.Clock()
         self.reset()
+        self.BLOCK_SIZE = BLOCK_SIZE
 
 
     def reset(self):
@@ -120,7 +121,7 @@ class SnakeGameAI:
         game_over = False
         if self.is_collision() or self.frame_iteration > 100*len(self.snake):
             game_over = True
-            reward = -6 if self.isCollidingWithSelf() else -3 if self.isCollidingWithWall else -4
+            reward = -6 if self.isCollidingWithSelf() else -4 if self.isCollidingWithWall else -4
             return reward, game_over, self.score
         
         if self._is_moving_towards_tail(action):
@@ -132,7 +133,7 @@ class SnakeGameAI:
         # 4. place new food or just move
         if self.head == self.food:
             self.score += 1
-            reward += 4
+            reward += 7
             self._place_food()
         else:
             self.snake.pop()
