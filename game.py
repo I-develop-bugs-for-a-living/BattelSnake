@@ -24,7 +24,7 @@ BLUE2 = (0, 100, 255)
 BLACK = (0,0,0)
 
 BLOCK_SIZE = 20
-SPEED = 200
+SPEED = 4
 
 class SnakeGameAI:
     
@@ -165,3 +165,24 @@ class SnakeGameAI:
             y -= BLOCK_SIZE
 
         self.head = Point(x, y)
+        
+        
+def move():
+
+    moves = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
+    return random.choice(moves)
+        
+if __name__ == '__main__':
+    game = SnakeGameAI()
+    
+    # game loop
+    while True:
+        reward, game_over, score = game.play_step(move())
+        
+        if game_over == True:
+            break
+        
+    print('Final Score', score)
+        
+        
+    pygame.quit()
