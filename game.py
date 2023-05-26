@@ -26,9 +26,14 @@ BLACK = (0,0,0)
 BLOCK_SIZE = 20
 SPEED = 300
 
+def clamp(n, minn, maxn):
+    return max(min(maxn, n), minn)
+
 class SnakeGameAI:
     def _is_moving_towards_tail(self, action):
         # Calculate the next head position based on the action
+        if len(self.snake) < 7:
+            return False
         if np.array_equal(action, [1, 0, 0]):
             new_head = Point(self.head.x + BLOCK_SIZE, self.head.y)
         elif np.array_equal(action, [0, 1, 0]):
@@ -41,7 +46,7 @@ class SnakeGameAI:
             return True
 
         # Check if the distance between the head and the tail is at most 4 blocks
-        if len(self.snake) > 3:
+        if len(self.snake) > 1:
             tail = self.snake[-1]
             distance = abs(new_head.x - tail.x) + abs(new_head.y - tail.y)
             if distance <= 4:
@@ -115,22 +120,23 @@ class SnakeGameAI:
         game_over = False
         if self.is_collision() or self.frame_iteration > 100*len(self.snake):
             game_over = True
-            reward = -3 if self.isCollidingWithSelf() else -2 if self.isCollidingWithWall else -4
+            reward = -6 if self.isCollidingWithSelf() else -3 if self.isCollidingWithWall else -4
             return reward, game_over, self.score
         
         if self._is_moving_towards_tail(action):
-            reward = -1
+            reward = -2
+            print("Moving towards tail")
         elif self.is_head_adjacent_to_body():
             reward = 0
 
         # 4. place new food or just move
         if self.head == self.food:
             self.score += 1
-            reward += 6
+            reward += 4
             self._place_food()
         else:
             self.snake.pop()
-        
+        reward = clamp(reward, -200, 80)
         # 5. update ui and clock
         self._update_ui()
         self.clock.tick(SPEED)
