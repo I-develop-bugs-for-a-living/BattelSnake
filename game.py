@@ -24,9 +24,22 @@ BLUE2 = (0, 100, 255)
 BLACK = (0,0,0)
 
 BLOCK_SIZE = 20
-SPEED = 100
+SPEED = 200
 
 class SnakeGameAI:
+    
+    def _is_moving_towards_tail(self, action):
+    # Calculate the next head position based on the action
+        if np.array_equal(action, [1, 0, 0]):
+            new_head = self.head + Point(BLOCK_SIZE, 0)
+        elif np.array_equal(action, [0, 1, 0]):
+            new_head = self.head + Point(0, BLOCK_SIZE)
+        else:
+            new_head = self.head - Point(BLOCK_SIZE, 0) # Assuming LEFT action
+            
+        # Check if the new head position is equal to the position of the tail segment
+        return new_head == self.snake[-1]
+
 
     def __init__(self, w=640, h=480):
         self.w = w
